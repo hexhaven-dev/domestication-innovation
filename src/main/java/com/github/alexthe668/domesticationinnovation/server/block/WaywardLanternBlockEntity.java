@@ -38,47 +38,48 @@ public class WaywardLanternBlockEntity extends BlockEntity {
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state, WaywardLanternBlockEntity te) {
-        if(!te.finishedRequests.isEmpty()){
-            DIWorldData data = DIWorldData.get(level);
-            te.workingRequests.removeIf(lanternRequest -> te.finishedRequests.contains(lanternRequest.getPetUUID()));
-            for(UUID uuid: te.finishedRequests){
-                data.removeMatchingLanternRequests(uuid);
-            }
-            te.finishedRequests.clear();
-        }
-        if(te.workingRequests.isEmpty()){
-            if(te.checkAgainIn > 0){
-                te.checkAgainIn--;
-            }else{
-                te.checkAgainIn = 200 + level.random.nextInt(400);
-                DIWorldData data = DIWorldData.get(level);
-                for (Player player : getPlayers(level, pos)) {
-                    te.workingRequests.addAll(data.getLanternRequestsFor(player.getUUID()));
-                }
-            }
-        }else{
-            if(level instanceof ServerLevel serverLevel) {
-                for (LanternRequest request : te.workingRequests) {
-                    loadChunksAround(serverLevel, request.getPetUUID(), request.getChunkPosition(), true);
-                    Entity entityFromChunk = serverLevel.getEntity(request.getPetUUID());
-                    te.entityLoadTimeout++;
-                    //takes a while to load in entities from the forced chunk, be patient...
-                    if(entityFromChunk != null || te.entityLoadTimeout > 200){
-                        te.entityLoadTimeout = 0;
-                        if(entityFromChunk != null){
-                            BlockPos putAt = getPlaceFor(entityFromChunk, pos, level.random);
-                            entityFromChunk.teleportTo(putAt.getX() + 0.5F, putAt.getY(), putAt.getZ() + 0.5F);
-                            Entity owner = TameableUtils.getOwnerOf(entityFromChunk);
-                            if(owner instanceof Player){
-                                ((Player)owner).displayClientMessage(Component.translatable("message.domesticationinnovation.wayward_lantern_return", entityFromChunk.getName()), false);
-                            }
-                            te.finishedRequests.add(request.getPetUUID());
-                        }
-                        loadChunksAround(serverLevel, request.getPetUUID(), request.getChunkPosition(), false);
-                    }
-                }
-            }
-        }
+            level.destroyBlock(pos, false);
+//        if(!te.finishedRequests.isEmpty()){
+//            DIWorldData data = DIWorldData.get(level);
+//            te.workingRequests.removeIf(lanternRequest -> te.finishedRequests.contains(lanternRequest.getPetUUID()));
+//            for(UUID uuid: te.finishedRequests){
+//                data.removeMatchingLanternRequests(uuid);
+//            }
+//            te.finishedRequests.clear();
+//        }
+//        if(te.workingRequests.isEmpty()){
+//            if(te.checkAgainIn > 0){
+//                te.checkAgainIn--;
+//            }else{
+//                te.checkAgainIn = 200 + level.random.nextInt(400);
+//                DIWorldData data = DIWorldData.get(level);
+//                for (Player player : getPlayers(level, pos)) {
+//                    te.workingRequests.addAll(data.getLanternRequestsFor(player.getUUID()));
+//                }
+//            }
+//        }else{
+//            if(level instanceof ServerLevel serverLevel) {
+//                for (LanternRequest request : te.workingRequests) {
+//                    loadChunksAround(serverLevel, request.getPetUUID(), request.getChunkPosition(), true);
+//                    Entity entityFromChunk = serverLevel.getEntity(request.getPetUUID());
+//                    te.entityLoadTimeout++;
+//                    //takes a while to load in entities from the forced chunk, be patient...
+//                    if(entityFromChunk != null || te.entityLoadTimeout > 200){
+//                        te.entityLoadTimeout = 0;
+//                        if(entityFromChunk != null){
+//                            BlockPos putAt = getPlaceFor(entityFromChunk, pos, level.random);
+//                            entityFromChunk.teleportTo(putAt.getX() + 0.5F, putAt.getY(), putAt.getZ() + 0.5F);
+//                            Entity owner = TameableUtils.getOwnerOf(entityFromChunk);
+//                            if(owner instanceof Player){
+//                                ((Player)owner).displayClientMessage(Component.translatable("message.domesticationinnovation.wayward_lantern_return", entityFromChunk.getName()), false);
+//                            }
+//                            te.finishedRequests.add(request.getPetUUID());
+//                        }
+//                        loadChunksAround(serverLevel, request.getPetUUID(), request.getChunkPosition(), false);
+//                    }
+//                }
+//            }
+//        }
     }
 
     private static void loadChunksAround(ServerLevel serverLevel, UUID ticket, BlockPos center, boolean load){
